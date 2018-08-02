@@ -37,6 +37,7 @@
 
 (defcustom gg-find-def-extension-search-terms
   '(("clj" . ("defn %s" "defmacro %s" "def %s"))
+    ("cljs" . ("defn %s" "defmacro %s" "def %s"))
     ("el" . ("defun %s" "defmacro %s" "defvar %s" "defcustom %s"))
     ("js" . ("function %s" "%s: function"))
     ("php" . ("function %s")))
@@ -56,6 +57,12 @@ by the return value of the input function defined by the
                  (if (string-match-p "/" tap)
                      (cadr (split-string tap "/"))
                    tap))))
+    ("cljs" . (lambda ()
+               (let ((tap (thing-at-point 'symbol t)))
+                 ;; strip namespace
+                 (if (string-match-p "/" tap)
+                     (cadr (split-string tap "/"))
+                   tap))))
     ("el" . (lambda () (thing-at-point 'symbol t)))
     ("js" . (lambda () (thing-at-point 'symbol t)))
     ("php" . (lambda () (thing-at-point 'symbol t))))
@@ -64,6 +71,11 @@ The result of the input function will be used as input
 for every search term defined by the `gg-find-def-extension-search-terms'
 variable."
   :type '(alist :key-type string :value-type function)
+  :group 'gg-find-def)
+
+(defcustom gg-find-def-hook nil
+  "Hook run after gg-find-def."
+  :type 'hook
   :group 'gg-find-def)
 
 ;;;###autoload
@@ -111,7 +123,8 @@ current position will be marked."
               (forward-line (- (string-to-number linum) 1))
               (recenter-top-bottom))
           (message "No definition found")))
-    (message "Not in a git repository")))
+    (message "Not in a git repository"))
+  (run-hooks 'gg-find-def-hook))
 
 (provide 'gg-find-def)
 
